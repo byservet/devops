@@ -17,6 +17,8 @@ function App() {
     fetchTasks();
   }, []);
 
+  console.log("test added");
+  
   const fetchTasks = async () => {
     try {
       setLoading(true);
