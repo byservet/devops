@@ -34,7 +34,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-console.log("mongo: ", process.env.MONGO_URI)
+console.log('mongo: ', process.env.MONGO_URI);
 
 // Database connection
 mongoose
