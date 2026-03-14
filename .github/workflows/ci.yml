@@ -43,23 +43,30 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout (Optional)
         uses: actions/checkout@v4
 
-      # 1. Adım: SSH Agent'ı kur (Anahtarı belleğe güvenli yükler)
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_KEY }}
+      - name: Add EC2 to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
 
-      # 2. Adım: EC2'ye bağlan ve komutları çalıştır
-      - name: Deploy on EC2
+      - name: Write SSH key
+        run: |
+          echo "${EC2_KEY}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+        env:
+          EC2_KEY: ${{ secrets.EC2_KEY }}
+
+      - name: Deploy on EC2 (git pull + docker compose up -d --build)
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_APP_DIR: ${{ secrets.EC2_APP_DIR }}
         run: |
-          ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'EOF'
+          ssh -i ec2_key.pem ${EC2_USER}@${EC2_HOST} << 'EOF'
             set -e
             cd "${EC2_APP_DIR}"
             git fetch --all
