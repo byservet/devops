@@ -1,18 +1,14 @@
 name: build-and-lint
 
-# triggers: define when this workflow should run
-# trigger on push to these branches
 on:
   push:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
 
-# define a job (Multiple also can be)
 jobs:
-  build-and-list:
+  build-and-lint:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -43,42 +39,39 @@ jobs:
         run: docker build -t frontend ./client
 
   deploy:
-    needs: build-and-lint
+    needs: build-and-lint # Buradaki isim yukarıdakiyle aynı olmalı
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (optional)
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Add EC2 host to know_hosts
-        run: 
+      - name: Add EC2 host to known_hosts
+        run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/know_hosts
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
 
-      - name: Write SSH keyscan
-        run:
+      - name: Write SSH Key
+        env:
+          EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
           echo "${EC2_KEY}" > ec2_key.pem
           chmod 600 ec2_key.pem
       
-      - name: Deploy on EC2 (git pull + docker compose up -d --build)
+      - name: Deploy on EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_APP_DIR: ${{ secrets.EC2_APP_DIR }}
-        run:
-          ssh -i ec2_key.pem ${EC2_USER}@${EC2_HOST} << EOF
+        run: |
+          ssh -i ec2_key.pem ${EC2_USER}@${EC2_HOST} << 'EOF'
             set -e
             cd "${EC2_APP_DIR}"
-
-          git fetch --all
-          git reset --hard origin/main
-
-          docker compose up -d --build
-
-          docker image prune -f
-
-          docker compose ps
-        EOF
-
+            git fetch --all
+            git reset --hard origin/main
+            docker compose up -d --build
+            docker image prune -f
+            docker compose ps
+          EOF
