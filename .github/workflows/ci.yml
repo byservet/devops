@@ -57,7 +57,7 @@ jobs:
         env:
           EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          echo "${EC2_KEY}" > ec2_key.pem
+          printf "%s\n" "$EC2_KEY" > ec2_key.pem
           chmod 600 ec2_key.pem
       
       - name: Deploy on EC2
