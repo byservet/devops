@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout Code'){
             steps {
-                git url: 'https://github.com/byservet/devops.git', branch: 'master/main'
+                git url: 'https://github.com/byservet/devops.git', branch: '*/main'
             }
         }
         stage('Prepare .env'){
