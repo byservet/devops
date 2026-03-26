@@ -9,11 +9,7 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Code'){
-            steps {
-                git url: 'https://github.com/byservet/devops.git', branch: '*/main'
-            }
-        }
+
         stage('Prepare .env'){
             steps {
                 sh '''
@@ -25,6 +21,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Build Docker Images'){
             steps {
                 sh '''
@@ -36,6 +33,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Run with docker compose'){
             steps {
                 sh '''
@@ -44,7 +42,6 @@ pipeline {
 
                 echo "Showing running containers"
                 docker ps
-
                 '''
             }
         }
